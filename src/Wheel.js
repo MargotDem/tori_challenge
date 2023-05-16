@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Thumbsup from './Thumbsup';
 
 export default class Wheel extends React.Component {
 	constructor(props) {
 		super(props);
-		console.log(props);
-		console.log(this.props);
 		this.state = {
 			percentage: props.percentage,
 			currentAngle: 0,
@@ -24,19 +22,17 @@ export default class Wheel extends React.Component {
 
 	}
 
-
 	calculatePositions(){
-		console.log("calc poss, " + this.wheelElm)
         this.wheelWidth = this.wheelElm.getBoundingClientRect()['width'];
         this.wheelHeight = this.wheelElm.getBoundingClientRect()['height']
         this.wheelX = this.wheelElm.getBoundingClientRect()['x'] + this.wheelWidth / 2;
         this.wheelY = this.wheelElm.getBoundingClientRect()['y'] + this.wheelHeight / 2;
-	  }
-	  
-	  onPositionChange(callback){
-        this.positionCallbacks.push(callback);
-      }
-	
+	}
+
+	onPositionChange(callback){
+	this.positionCallbacks.push(callback);
+	}
+
 	calculateAngle(currentX, currentY){
         let xLength = currentX - this.wheelX;
         let yLength = currentY - this.wheelY;
@@ -56,10 +52,6 @@ export default class Wheel extends React.Component {
 		//   }
 	}
 
-	testt() {
-		console.log("tesssrfezpfojzefgnozerj")
-	}
-
 	onRelease(){
         if(this.isDragging){
           this.isDragging = false;
@@ -67,10 +59,8 @@ export default class Wheel extends React.Component {
         }		
       }
 	  
-
-	  
 	  onMove(x, y){
-		  console.log("on movee")
+		let percentage
         if(!this.isDragging)
           return
     
@@ -79,20 +69,23 @@ export default class Wheel extends React.Component {
     
         let deltaAngle = this.calculateAngle(x, y) - this.startAngle;
         this.currentAngle = deltaAngle + this.oldAngle;
-	
-		// this.currentAngle >= 0 && this.currentAngle <= 180
+		// console.log("current angle: " + this.currentAngle + " score: " + this.props.percentage)
+		if (Math.abs(this.currentAngle) <= 180) {
+			percentage = 100 - Math.abs(this.currentAngle) * 100 / 180
+		}
+		else {
+			percentage = ((Math.abs(this.currentAngle) % 180) * 100 / 180)
+		}
 		if (this.currentAngle <= 180 && this.currentAngle >= 0) {
-			this.setState({
-				...this.state,
-				currentAngle: this.currentAngle
+			this.props.updateState({
+				currentAngle: this.currentAngle,
+				percentage: percentage
 			})
-
 		}
 	  }
 
 	componentDidMount() {
-		console.log("hey compo did mount")
-		this.wheelElm = document.getElementById('wheelTest');
+		this.wheelElm = document.getElementById('wheel-svg');
 		this.calculatePositions();
 
 		this.currentAngle = 0;
@@ -106,8 +99,7 @@ export default class Wheel extends React.Component {
 	}
 	  
 	  componentDidUpdate() {
-		  console.log("hey compo did update")
-		  let deg = this.state.currentAngle
+		  let deg = this.props.currentAngle
 			this.wheelElm.style.transform = `rotate(${deg}deg)`;
 			for(let callback of this.positionCallbacks){
 				callback(deg);
@@ -115,7 +107,6 @@ export default class Wheel extends React.Component {
 	  }
 
 	  onGrab (x, y) {
-		  console.log("on grabb")
 		  this.isDragging = true;
           this.startAngle = this.calculateAngle(x, y);	
 	}
@@ -124,25 +115,12 @@ export default class Wheel extends React.Component {
 		let {
 			percentage,
 			currentAngle
-		} = this.state
+		} = this.props
 
-	
-	
-		// console.log("state percentage " + percentage)
-		if (Math.abs(currentAngle) <= 180) {
-			percentage = 100 - Math.abs(currentAngle) * 100 / 180
-		}
-		else {
-			percentage = ((Math.abs(currentAngle) % 180) * 100 / 180)
-		}
-		// percentage = 100 - ((Math.abs(currentAngle) % 180) * 100 / 180)
-		
-		console.log("angle  " + currentAngle + ", % : ", percentage)
+		// console.log("angle  " + currentAngle + ", % : ", percentage)
 		return (
 			<div
-				className="Wheel"
-				id="wheelTest"
-
+				className="wheel"
 				onMouseDown={(e) => this.onGrab(e.clientX, e.clientY)}
 				onMouseMove={(e) => {this.onMouseMove(e)}}
 				onMouseUp={() => {this.onRelease()}}
@@ -152,13 +130,14 @@ export default class Wheel extends React.Component {
 			>
 				<div>
 					<Thumbsup
-						rotate={currentAngle}
 						percentage={percentage}
-						// percentage={percentage}
 					/>
 				</div>
 			</div>
 		)
 	}
-	
 }
+
+/*
+animation from: https://codepen.io/Coderesting/pen/BaaELKv
+*/
